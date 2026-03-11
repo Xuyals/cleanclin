@@ -1,0 +1,6 @@
+@CleanClinn_HostAddress = http://localhost:5237
+
+GET {{CleanClinn_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
