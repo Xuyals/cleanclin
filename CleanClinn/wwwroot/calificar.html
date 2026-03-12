@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calificar servicio — Clean Clinn</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .auth-page {
+            background: linear-gradient(135deg, #EBF4FF 0%, #F4F9FF 50%, #EAF6F0 100%);
+        }
+
+        .auth-box {
+            text-align: center;
+        }
+
+            .auth-box h2 {
+                font-size: 1.7rem;
+                margin-bottom: 0.3rem;
+            }
+
+        /* Estrellas */
+        .star-selector {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .star {
+            font-size: 2.8rem;
+            cursor: pointer;
+            color: var(--borde);
+            transition: color 0.15s, transform 0.2s;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+        }
+
+            .star.activa,
+            .star:hover {
+                color: var(--amarillo);
+                transform: scale(1.15);
+            }
+
+        .star-label {
+            font-size: 0.88rem;
+            color: var(--texto-suave);
+            font-weight: 600;
+            margin-bottom: 1.4rem;
+            min-height: 1.2em;
+        }
+
+        /* Textarea alineada a la izquierda */
+        .form-group {
+            text-align: left;
+        }
+
+        .btn-calificar-full {
+            width: 100%;
+            justify-content: center;
+            padding: 0.9rem;
+            font-size: 1rem;
+            border-radius: 999px;
+            margin-top: 0.5rem;
+        }
+
+        .volver-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 1.2rem;
+            font-size: 0.88rem;
+            color: var(--texto-suave);
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+            .volver-link:hover {
+                color: var(--azul-dark);
+            }
+    </style>
+</head>
+<body class="auth-page">
+
+    <div class="auth-box" style="max-width:460px;">
+
+        <div style="font-size:2.5rem; margin-bottom:0.8rem;">⭐</div>
+        <h2>Calificar servicio</h2>
+        <p class="subtitle">Cuéntanos cómo te fue con el servicio</p>
+
+        <div class="form-group" style="margin-bottom:0.5rem; text-align:center;">
+            <label style="text-align:center; display:block; margin-bottom:0.6rem;">Puntaje</label>
+            <div class="star-selector" id="star-selector">
+                <span class="star" data-val="1">★</span>
+                <span class="star" data-val="2">★</span>
+                <span class="star" data-val="3">★</span>
+                <span class="star" data-val="4">★</span>
+                <span class="star" data-val="5">★</span>
+            </div>
+            <div class="star-label" id="star-label">Selecciona un puntaje</div>
+        </div>
+
+        <div class="form-group">
+            <label>Comentario <span style="color:var(--texto-claro); font-weight:500; text-transform:none; letter-spacing:0;">(opcional)</span></label>
+            <textarea id="comentario" placeholder="¿Cómo fue el servicio? ¿Llegó a tiempo? ¿Resolvió el problema?" style="min-height:100px;"></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-calificar-full" id="btn-calificar">
+            Enviar calificación
+        </button>
+
+        <div>
+            <a class="volver-link" href="/pages/dashboard-usuario.html">
+                ← Volver a mis solicitudes
+            </a>
+        </div>
+
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        // Efecto burbujas en botones
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                this.classList.remove('ripple-active');
+                void this.offsetWidth;
+                this.classList.add('ripple-active');
+                setTimeout(() => this.classList.remove('ripple-active'), 600);
+            });
+        });
+    </script>
+
+    <script type="module">
+        import { calificar } from '/js/api.js';
+        import { mostrarToast, requireAuth } from '/js/utils.js';
+
+        requireAuth();
+
+        const params = new URLSearchParams(window.location.search);
+        const solicitudId = parseInt(params.get("solicitudId"));
+
+        if (!solicitudId) {
+            window.location.href = "/pages/dashboard-usuario.html";
+        }
+
+        const etiquetas = ["", "Muy malo 😞", "Malo 😕", "Regular 😐", "Bueno 😊", "Excelente 🌟"];
+        let puntajeSeleccionado = 0;
+
+        const estrellas = document.querySelectorAll(".star");
+
+        estrellas.forEach(star => {
+            star.addEventListener("click", () => {
+                puntajeSeleccionado = parseInt(star.dataset.val);
+                document.getElementById("star-label").textContent = etiquetas[puntajeSeleccionado];
+                estrellas.forEach(s => {
+                    s.classList.toggle("activa", parseInt(s.dataset.val) <= puntajeSeleccionado);
+                });
+            });
+
+            star.addEventListener("mouseover", () => {
+                const val = parseInt(star.dataset.val);
+                estrellas.forEach(s => {
+                    s.style.color = parseInt(s.dataset.val) <= val ? "var(--amarillo)" : "var(--borde)";
+                });
+            });
+
+            star.addEventListener("mouseout", () => {
+                estrellas.forEach(s => {
+                    s.style.color = parseInt(s.dataset.val) <= puntajeSeleccionado ? "var(--amarillo)" : "var(--borde)";
+                });
+            });
+        });
+
+        document.getElementById("btn-calificar").addEventListener("click", async () => {
+            if (puntajeSeleccionado === 0) {
+                mostrarToast("Selecciona un puntaje", true);
+                return;
+            }
+
+            const comentario = document.getElementById("comentario").value.trim();
+            const btn = document.getElementById("btn-calificar");
+            btn.disabled = true;
+            btn.textContent = "Enviando...";
+
+            try {
+                await calificar(solicitudId, puntajeSeleccionado, comentario);
+                mostrarToast("¡Gracias por tu calificación!");
+                setTimeout(() => window.location.href = "/pages/dashboard-usuario.html", 1200);
+            } catch (err) {
+                mostrarToast(err.message, true);
+                btn.disabled = false;
+                btn.textContent = "Enviar calificación";
+            }
+        });
+    </script>
+</body>
+</html>

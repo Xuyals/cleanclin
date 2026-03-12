@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trabajadores — Clean Clinn</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        /* Filtros */
+        .filtros {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .filtro-btn {
+            background: var(--blanco);
+            border: 1.5px solid var(--borde);
+            border-radius: 999px;
+            padding: 0.42rem 1rem;
+            font-size: 0.84rem;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+            color: var(--texto-suave);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .filtro-btn:hover {
+                border-color: var(--azul-suave);
+                color: var(--azul-dark);
+                background: var(--azul-bg);
+            }
+
+            .filtro-btn.activo {
+                background: var(--azul);
+                border-color: var(--azul);
+                color: var(--blanco);
+                font-weight: 700;
+                box-shadow: 0 3px 10px rgba(110,181,255,0.3);
+            }
+
+        /* Calificación */
+        .calificacion-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.84rem;
+        }
+
+            .calificacion-bar .puntaje {
+                color: var(--texto-suave);
+                font-weight: 600;
+            }
+
+        /* Disponibilidad */
+        .disponibilidad {
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+            .disponibilidad.disponible {
+                color: #2E9E6B;
+            }
+
+            .disponibilidad.no-disponible {
+                color: var(--rojo-dark);
+            }
+
+        /* Descripción trabajador */
+        .trabajador-desc {
+            font-size: 0.82rem;
+            color: var(--texto-suave);
+            margin-top: 0.2rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* Badge especialidad */
+        .badge-especialidad {
+            display: inline-block;
+            background: var(--azul-bg);
+            border: 1px solid var(--azul-suave);
+            color: var(--azul-dark);
+            border-radius: 999px;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        /* Contador resultados */
+        .resultados-count {
+            font-size: 0.85rem;
+            color: var(--texto-suave);
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Clean<span>Clinn</span></div>
+        <nav>
+            <a href="/index.html" class="btn btn-outline btn-sm">Inicio</a>
+            <a href="/login.html" class="btn btn-primary btn-sm">Entrar</a>
+        </nav>
+    </nav>
+
+    <div class="page-content">
+
+        <div class="dash-header">
+            <div>
+                <h1>Trabajadores 👷</h1>
+                <p class="welcome">Profesionales disponibles en la plataforma</p>
+            </div>
+        </div>
+
+        <div class="filtros">
+            <button class="filtro-btn activo" onclick="filtrar('', this)">Todos</button>
+            <button class="filtro-btn" onclick="filtrar('Limpieza', this)">🧹 Limpieza</button>
+            <button class="filtro-btn" onclick="filtrar('Plomería', this)">🔧 Plomería</button>
+            <button class="filtro-btn" onclick="filtrar('Electricidad', this)">⚡ Electricidad</button>
+            <button class="filtro-btn" onclick="filtrar('Gas', this)">🔥 Gas</button>
+            <button class="filtro-btn" onclick="filtrar('Vidrios', this)">🪟 Vidrios</button>
+            <button class="filtro-btn" onclick="filtrar('Reparaciones', this)">🏠 Reparaciones</button>
+        </div>
+
+        <div class="resultados-count" id="resultados-count"></div>
+
+        <div id="contenedor">
+            <div class="loader"><div class="spinner"></div></div>
+        </div>
+
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                this.classList.remove('ripple-active');
+                void this.offsetWidth;
+                this.classList.add('ripple-active');
+                setTimeout(() => this.classList.remove('ripple-active'), 600);
+            });
+        });
+    </script>
+
+    <script type="module">
+        import { getTrabajadores } from '/js/api.js';
+        import { mostrarToast, estrellas, inicialNombre } from '/js/utils.js';
+
+        let todos = [];
+
+        async function cargar() {
+            try {
+                todos = await getTrabajadores();
+                renderizar(todos);
+            } catch (err) {
+                mostrarToast("Error al cargar trabajadores", true);
+            }
+        }
+
+        function renderizar(lista) {
+            const c = document.getElementById("contenedor");
+            const count = document.getElementById("resultados-count");
+
+            count.textContent = lista.length === 0
+                ? ""
+                : `${lista.length} profesional${lista.length !== 1 ? "es" : ""} encontrado${lista.length !== 1 ? "s" : ""}`;
+
+            if (lista.length === 0) {
+                c.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🔍</div>
+                            <p>No hay trabajadores en esta categoría</p>
+                        </div>`;
+                return;
+            }
+
+            c.innerHTML = `<div class="grid-3">${lista.map(t => `
+                    <div class="trabajador-card">
+                        <div class="avatar">${inicialNombre(t.nombre)}</div>
+                        <div class="nombre">${t.nombre}</div>
+                        <span class="badge-especialidad">${t.especialidad}</span>
+                        <div class="calificacion-bar">
+                            <span class="estrellas">${estrellas(t.calificacion)}</span>
+                            <span class="puntaje">${t.calificacion > 0 ? t.calificacion.toFixed(1) : "Sin calificaciones"}</span>
+                        </div>
+                        <div class="disponibilidad ${t.disponible ? 'disponible' : 'no-disponible'}">
+                            <span class="${t.disponible ? 'disponible-dot' : 'no-disponible-dot'}"></span>
+                            ${t.disponible ? "Disponible" : "No disponible"}
+                        </div>
+                        ${t.descripcion ? `<p class="trabajador-desc">${t.descripcion}</p>` : ""}
+                    </div>
+                `).join("")}</div>`;
+        }
+
+        window.filtrar = function (especialidad, btn) {
+            document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("activo"));
+            btn.classList.add("activo");
+
+            if (!especialidad) {
+                renderizar(todos);
+            } else {
+                renderizar(todos.filter(t => t.especialidad.includes(especialidad)));
+            }
+        };
+
+        cargar();
+    </script>
+</body>
+</html>

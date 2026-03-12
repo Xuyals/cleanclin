@@ -5,77 +5,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Iniciar sesión — Clean Clinn</title>
     <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .auth-page {
+            background: radial-gradient(ellipse at 20% 20%, rgba(110,181,255,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(133,217,176,0.12) 0%, transparent 50%), var(--fondo);
+        }
+
+        .auth-box {
+            animation: fadeUp 0.4s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-top {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 1.8rem;
+            color: var(--texto);
+        }
+
+            .logo-top span {
+                color: var(--azul-dark);
+            }
+
+        .auth-box h2 {
+            text-align: center;
+        }
+
+        .auth-box .subtitle {
+            text-align: center;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin: 1.2rem 0;
+            color: var(--texto-claro);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+            .divider::before,
+            .divider::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: var(--borde);
+            }
+
+        .btn-login-full {
+            width: 100%;
+            justify-content: center;
+            padding: 0.9rem;
+            font-size: 1rem;
+            margin-top: 0.3rem;
+        }
+
+        .volver-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--texto-suave);
+            font-weight: 600;
+            transition: color 0.2s;
+            justify-content: center;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+            .volver-link:hover {
+                color: var(--azul-dark);
+            }
+
+        /* Ojo para mostrar/ocultar contraseña */
+        .input-wrapper {
+            position: relative;
+        }
+
+            .input-wrapper input {
+                padding-right: 2.8rem;
+            }
+
+        .toggle-pass {
+            position: absolute;
+            right: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--texto-claro);
+            transition: color 0.2s;
+            user-select: none;
+        }
+
+            .toggle-pass:hover {
+                color: var(--azul-dark);
+            }
+    </style>
 </head>
 <body class="auth-page">
 
     <div class="auth-box">
+
+        <div class="logo-top">Clean<span>Clinn</span></div>
+
         <h2>Bienvenido 👋</h2>
         <p class="subtitle">Ingresa con tu cuenta de Clean Clinn</p>
 
+        <div style="height: 1.5rem;"></div>
+
         <div class="form-group">
             <label>Correo electrónico</label>
-            <input type="email" id="email" placeholder="tu@correo.com" />
+            <input type="email" id="email" placeholder="tu@correo.com" autocomplete="email" />
         </div>
 
         <div class="form-group">
             <label>Contraseña</label>
-            <input type="password" id="password" placeholder="••••••••" />
+            <div class="input-wrapper">
+                <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+                <span class="toggle-pass" id="toggle-pass" title="Mostrar contraseña">👁️</span>
+            </div>
         </div>
 
-        <button class="btn btn-primary" id="btn-login" style="width:100%; justify-content:center; padding:0.85rem;">
+        <button class="btn btn-primary btn-login-full" id="btn-login">
             Iniciar sesión
         </button>
+
+        <div class="divider">o</div>
 
         <div class="auth-switch">
             ¿No tienes cuenta? <a href="/register.html">Regístrate</a>
         </div>
-        <div class="auth-switch" style="margin-top:0.5rem;">
-            <a href="/index.html">← Volver al inicio</a>
-        </div>
+
+        <a class="volver-link" href="/index.html">← Volver al inicio</a>
+
     </div>
 
     <div id="toast"></div>
 
+    <script>
+        // Efecto burbujas
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                this.classList.remove('ripple-active');
+                void this.offsetWidth;
+                this.classList.add('ripple-active');
+                setTimeout(() => this.classList.remove('ripple-active'), 600);
+            });
+        });
+
+        // Mostrar/ocultar contraseña
+        const togglePass = document.getElementById('toggle-pass');
+        const passInput = document.getElementById('password');
+        togglePass.addEventListener('click', () => {
+            const visible = passInput.type === 'text';
+            passInput.type = visible ? 'password' : 'text';
+            togglePass.textContent = visible ? '👁️' : '🙈';
+        });
+    </script>
+
     <script type="module">
-    import { login } from '/js/api.js';
-    import { mostrarToast } from '/js/utils.js';
+        import { login } from '/js/api.js';
+        import { mostrarToast } from '/js/utils.js';
 
-    document.getElementById("btn-login").addEventListener("click", async () => {
-      const email    = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+        document.getElementById("btn-login").addEventListener("click", async () => {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
 
-      if (!email || !password) {
-        mostrarToast("Completa todos los campos", true);
-        return;
-      }
+            if (!email || !password) {
+                mostrarToast("Completa todos los campos", true);
+                return;
+            }
 
-      const btn = document.getElementById("btn-login");
-      btn.disabled = true;
-      btn.textContent = "Ingresando...";
+            const btn = document.getElementById("btn-login");
+            btn.disabled = true;
+            btn.textContent = "Ingresando...";
 
-      try {
-        const datos = await login(email, password);
-        mostrarToast("Bienvenido, " + datos.nombre);
+            try {
+                const datos = await login(email, password);
+                mostrarToast("Bienvenido, " + datos.nombre + " 👋");
 
-        setTimeout(() => {
-          if (datos.rol === "Trabajador") {
-            window.location.href = "/pages/dashboard-trabajador.html";
-          } else {
-            window.location.href = "/pages/dashboard-usuario.html";
-          }
-        }, 800);
+                setTimeout(() => {
+                    if (datos.rol === "Trabajador") {
+                        window.location.href = "/pages/dashboard-trabajador.html";
+                    } else {
+                        window.location.href = "/pages/dashboard-usuario.html";
+                    }
+                }, 800);
 
-      } catch (err) {
-        mostrarToast(err.message, true);
-        btn.disabled = false;
-        btn.textContent = "Iniciar sesión";
-      }
-    });
+            } catch (err) {
+                mostrarToast(err.message, true);
+                btn.disabled = false;
+                btn.textContent = "Iniciar sesión";
+            }
+        });
 
-    // Enter para enviar
-    document.getElementById("password").addEventListener("keydown", e => {
-      if (e.key === "Enter") document.getElementById("btn-login").click();
-    });
+        // Enter para enviar
+        document.getElementById("password").addEventListener("keydown", e => {
+            if (e.key === "Enter") document.getElementById("btn-login").click();
+        });
     </script>
 </body>
 </html>

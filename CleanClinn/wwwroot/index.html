@@ -6,12 +6,13 @@
     <title>Clean Clinn — Servicios para el hogar</title>
     <link rel="stylesheet" href="/css/style.css" />
     <style>
+        /* ── Hero ── */
         .hero {
             min-height: 88vh;
             display: flex;
             align-items: center;
             padding: 4rem 2.5rem;
-            background: radial-gradient(ellipse at 70% 30%, rgba(0,200,150,0.1) 0%, transparent 55%);
+            background: radial-gradient(ellipse at 80% 10%, rgba(110,181,255,0.18) 0%, transparent 50%), radial-gradient(ellipse at 10% 80%, rgba(133,217,176,0.13) 0%, transparent 50%), var(--fondo);
             position: relative;
             overflow: hidden;
         }
@@ -20,13 +21,27 @@
                 content: '';
                 position: absolute;
                 inset: 0;
-                background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+                background-image: radial-gradient(circle, rgba(110,181,255,0.07) 1px, transparent 1px);
                 background-size: 32px 32px;
                 pointer-events: none;
             }
 
+            /* Burbuja decorativa */
+            .hero::after {
+                content: '';
+                position: absolute;
+                right: -80px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 520px;
+                height: 520px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(110,181,255,0.12) 0%, transparent 70%);
+                pointer-events: none;
+            }
+
         .hero-content {
-            max-width: 640px;
+            max-width: 620px;
             z-index: 1;
         }
 
@@ -34,34 +49,38 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(0,200,150,0.1);
-            border: 1px solid rgba(0,200,150,0.3);
-            color: var(--verde);
-            padding: 0.35rem 0.9rem;
+            background: var(--azul-bg);
+            border: 1px solid var(--azul-suave);
+            color: var(--azul-dark);
+            padding: 0.38rem 1rem;
             border-radius: 999px;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
             text-transform: uppercase;
             margin-bottom: 1.5rem;
         }
 
         .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-size: clamp(2.4rem, 6vw, 4.2rem);
             letter-spacing: -1.5px;
             margin-bottom: 1.2rem;
+            color: var(--texto);
+            line-height: 1.1;
         }
 
             .hero h1 .accent {
-                color: var(--verde);
+                color: var(--azul-dark);
+                position: relative;
             }
 
         .hero p {
-            font-size: 1.1rem;
-            color: var(--gris-texto);
+            font-size: 1.05rem;
+            color: var(--texto-suave);
             max-width: 480px;
             margin-bottom: 2.2rem;
             line-height: 1.8;
+            font-weight: 500;
         }
 
         .hero-btns {
@@ -75,74 +94,139 @@
                 font-size: 1rem;
             }
 
-        /* Servicios */
+        /* ── Servicios ── */
         .servicios-section {
             padding: 5rem 2.5rem;
+            background: var(--blanco);
         }
 
             .servicios-section h2 {
                 font-size: 2rem;
                 margin-bottom: 0.5rem;
+                color: var(--texto);
             }
 
             .servicios-section .sub {
-                color: var(--gris-texto);
+                color: var(--texto-suave);
                 margin-bottom: 2.5rem;
+                font-weight: 500;
             }
 
         .servicios-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 1rem;
         }
 
         .servicio-item {
-            background: var(--gris-oscuro);
-            border: 1px solid var(--gris-borde);
+            background: var(--fondo);
+            border: 1.5px solid var(--borde);
             border-radius: var(--radio);
-            padding: 1.5rem 1.2rem;
+            padding: 1.6rem 1.2rem;
             text-align: center;
-            transition: border-color 0.2s, transform 0.2s;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            cursor: default;
         }
 
             .servicio-item:hover {
-                border-color: var(--verde);
-                transform: translateY(-3px);
+                border-color: var(--azul-suave);
+                transform: translateY(-4px);
+                box-shadow: var(--sombra-hover);
+                background: var(--blanco);
             }
 
             .servicio-item .icono {
-                font-size: 2rem;
+                font-size: 2.2rem;
                 margin-bottom: 0.8rem;
+                display: block;
             }
 
             .servicio-item h3 {
                 font-size: 0.95rem;
                 margin-bottom: 0.3rem;
+                color: var(--texto);
             }
 
             .servicio-item p {
                 font-size: 0.8rem;
-                color: var(--gris-texto);
+                color: var(--texto-suave);
+                font-weight: 500;
             }
 
-        /* CTA */
+        /* ── Stats ── */
+        .stats-section {
+            padding: 3rem 2.5rem;
+            background: var(--fondo);
+        }
+
+        .stats-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: var(--blanco);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--sombra);
+        }
+
+            .stat-item .valor {
+                font-family: 'Nunito', sans-serif;
+                font-size: 2.2rem;
+                font-weight: 800;
+                color: var(--azul-dark);
+                line-height: 1;
+                margin-bottom: 0.4rem;
+            }
+
+            .stat-item .etiqueta {
+                font-size: 0.85rem;
+                color: var(--texto-suave);
+                font-weight: 600;
+            }
+
+        /* ── CTA ── */
         .cta-section {
             margin: 0 2.5rem 5rem;
-            background: linear-gradient(135deg, rgba(0,200,150,0.15), rgba(0,200,150,0.05));
-            border: 1px solid rgba(0,200,150,0.25);
-            border-radius: 20px;
+            background: linear-gradient(135deg, var(--azul-bg) 0%, #EAF6F0 100%);
+            border: 1.5px solid var(--borde);
+            border-radius: 24px;
             padding: 4rem 3rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
+
+            .cta-section::before {
+                content: '🧹';
+                position: absolute;
+                font-size: 8rem;
+                opacity: 0.06;
+                right: 2rem;
+                top: 50%;
+                transform: translateY(-50%);
+                pointer-events: none;
+            }
 
             .cta-section h2 {
                 font-size: 2rem;
                 margin-bottom: 0.8rem;
+                color: var(--texto);
             }
 
             .cta-section p {
-                color: var(--gris-texto);
+                color: var(--texto-suave);
                 margin-bottom: 2rem;
+                font-weight: 500;
+                max-width: 480px;
+                margin-left: auto;
+                margin-right: auto;
             }
 
         .cta-btns {
@@ -150,6 +234,45 @@
             gap: 1rem;
             justify-content: center;
             flex-wrap: wrap;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.85rem;
+            color: var(--texto-claro);
+            border-top: 1px solid var(--borde);
+            font-weight: 500;
+        }
+
+            .footer span {
+                color: var(--azul-dark);
+                font-weight: 700;
+            }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .hero {
+                padding: 3rem 1.2rem;
+                min-height: auto;
+                padding-top: 5rem;
+            }
+
+            .hero-btns .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .servicios-section,
+            .stats-section {
+                padding: 3rem 1.2rem;
+            }
+
+            .cta-section {
+                margin: 0 1rem 3rem;
+                padding: 2.5rem 1.5rem;
+            }
         }
     </style>
 </head>
@@ -164,6 +287,7 @@
         </nav>
     </nav>
 
+    <!-- Hero -->
     <section class="hero">
         <div class="hero-content">
             <div class="hero-tag">✦ Servicios bajo demanda</div>
@@ -176,38 +300,61 @@
         </div>
     </section>
 
+    <!-- Stats -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="valor">+500</div>
+                <div class="etiqueta">Servicios realizados</div>
+            </div>
+            <div class="stat-item">
+                <div class="valor">+80</div>
+                <div class="etiqueta">Trabajadores activos</div>
+            </div>
+            <div class="stat-item">
+                <div class="valor">4.8⭐</div>
+                <div class="etiqueta">Calificación promedio</div>
+            </div>
+            <div class="stat-item">
+                <div class="valor">6</div>
+                <div class="etiqueta">Tipos de servicio</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servicios -->
     <section class="servicios-section">
         <div style="max-width:1100px; margin:0 auto;">
             <h2>¿Qué hacemos?</h2>
             <p class="sub">Servicios disponibles en la plataforma</p>
             <div class="servicios-grid">
                 <div class="servicio-item">
-                    <div class="icono">🧹</div>
+                    <span class="icono">🧹</span>
                     <h3>Limpieza</h3>
                     <p>Limpieza general del hogar</p>
                 </div>
                 <div class="servicio-item">
-                    <div class="icono">🔧</div>
+                    <span class="icono">🔧</span>
                     <h3>Plomería</h3>
                     <p>Reparación de tuberías</p>
                 </div>
                 <div class="servicio-item">
-                    <div class="icono">⚡</div>
+                    <span class="icono">⚡</span>
                     <h3>Electricidad</h3>
                     <p>Instalaciones eléctricas</p>
                 </div>
                 <div class="servicio-item">
-                    <div class="icono">🔥</div>
+                    <span class="icono">🔥</span>
                     <h3>Gas</h3>
                     <p>Mantenimiento de gas</p>
                 </div>
                 <div class="servicio-item">
-                    <div class="icono">🪟</div>
+                    <span class="icono">🪟</span>
                     <h3>Vidrios</h3>
                     <p>Reparación de vidrios</p>
                 </div>
                 <div class="servicio-item">
-                    <div class="icono">🏠</div>
+                    <span class="icono">🏠</span>
                     <h3>Reparaciones</h3>
                     <p>Reparaciones generales</p>
                 </div>
@@ -215,6 +362,7 @@
         </div>
     </section>
 
+    <!-- CTA -->
     <section class="cta-section">
         <h2>¿Eres trabajador?</h2>
         <p>Regístrate como profesional y recibe solicitudes de servicio cerca de ti.</p>
@@ -224,6 +372,21 @@
         </div>
     </section>
 
+    <footer class="footer">
+        © 2026 <span>CleanClinn</span> — Todos los derechos reservados
+    </footer>
+
     <div id="toast"></div>
+
+    <script>
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                this.classList.remove('ripple-active');
+                void this.offsetWidth;
+                this.classList.add('ripple-active');
+                setTimeout(() => this.classList.remove('ripple-active'), 600);
+            });
+        });
+    </script>
 </body>
 </html>
