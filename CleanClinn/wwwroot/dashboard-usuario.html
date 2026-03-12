@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi cuenta — Clean Clinn</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Clean<span>Clinn</span></div>
+        <nav>
+            <a href="/trabajadores.html" class="btn btn-outline btn-sm">Ver trabajadores</a>
+            <button class="btn btn-outline btn-sm" id="btn-logout">Salir</button>
+        </nav>
+    </nav>
+
+    <div class="page-content">
+
+        <div class="dash-header">
+            <div>
+                <h1>Mis solicitudes</h1>
+                <p class="welcome" id="bienvenida">Hola 👋</p>
+            </div>
+            <button class="btn btn-primary" id="btn-nueva">+ Nueva solicitud</button>
+        </div>
+
+        <div id="contenedor">
+            <div class="loader"><div class="spinner"></div></div>
+        </div>
+    </div>
+
+    <!-- Modal: nueva solicitud -->
+    <div class="modal-overlay" id="modal-nueva">
+        <div class="modal">
+            <h3>Nueva solicitud</h3>
+
+            <div class="form-group">
+                <label>Tipo de servicio</label>
+                <select id="tipo-servicio">
+                    <option value="">Selecciona un servicio</option>
+                    <option value="1">🧹 Limpieza — $50.000</option>
+                    <option value="2">🔧 Plomería — $80.000</option>
+                    <option value="3">⚡ Electricidad — $90.000</option>
+                    <option value="4">🔥 Gas — $100.000</option>
+                    <option value="5">🪟 Vidrios — $70.000</option>
+                    <option value="6">🏠 Reparaciones generales — $60.000</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Dirección del servicio</label>
+                <input type="text" id="direccion" placeholder="Calle 123 # 45-67" />
+            </div>
+
+            <div class="form-group">
+                <label>Descripción (opcional)</label>
+                <textarea id="descripcion" placeholder="Describe el problema o lo que necesitas..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-cancelar-modal">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-solicitud">Solicitar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: cancelar solicitud -->
+    <div class="modal-overlay" id="modal-cancelar">
+        <div class="modal">
+            <h3>Cancelar solicitud</h3>
+            <div class="form-group">
+                <label>Motivo de cancelación</label>
+                <textarea id="motivo-cancelacion" placeholder="¿Por qué cancelas?"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-no-cancelar">Volver</button>
+                <button class="btn btn-danger" id="btn-confirmar-cancelar">Cancelar servicio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+        import { getSolicitudes, crearSolicitud, cancelarSolicitud } from '/js/api.js';
+        import { mostrarToast, badgeEstado, requireAuth, logout } from '/js/utils.js';
+
+        requireAuth();
+
+        const nombre = localStorage.getItem("nombre");
+        document.getElementById("bienvenida").textContent = `Hola, ${nombre} 👋`;
+        document.getElementById("btn-logout").addEventListener("click", logout);
+
+        let solicitudACancelar = null;
+
+        // ── Cargar solicitudes ────────────────────────────────────
+        async function cargar() {
+            try {
+                const solicitudes = await getSolicitudes();
+                renderizar(solicitudes);
+            } catch (err) {
+                mostrarToast("Error al cargar solicitudes", true);
+            }
+        }
+
+        function renderizar(lista) {
+            const c = document.getElementById("contenedor");
+
+            if (lista.length === 0) {
+                c.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Aún no tienes solicitudes. ¡Crea una!</p></div>`;
+                return;
+            }
+
+            c.innerHTML = `<div style="display:flex; flex-direction:column; gap:1rem;">${lista.map(s => `
+            <div class="solicitud-card">
+              <div class="top">
+                <div class="tipo">${s.tipoServicio}</div>
+                ${badgeEstado(s.estado)}
+              </div>
+              <div class="meta">
+                <span>📍 ${s.direccion}</span>
+                <span>💰 $${s.costoEstimado.toLocaleString()}</span>
+                ${s.nombreTrabajador ? `<span>👷 ${s.nombreTrabajador}</span>` : ""}
+                <span>🕐 ${s.fechaCreacion}</span>
+              </div>
+              <div class="acciones">
+                ${s.estado === "Completada" ? `<button class="btn btn-outline btn-sm" onclick="abrirCalificar(${s.id})">⭐ Calificar</button>` : ""}
+                ${(s.estado === "Pendiente" || s.estado === "Aceptada") ? `<button class="btn btn-danger btn-sm" onclick="abrirCancelar(${s.id})">Cancelar</button>` : ""}
+              </div>
+            </div>
+          `).join("")}</div>`;
+        }
+
+        // ── Nueva solicitud ───────────────────────────────────────
+        document.getElementById("btn-nueva").addEventListener("click", () => {
+            document.getElementById("modal-nueva").classList.add("open");
+        });
+
+        document.getElementById("btn-cancelar-modal").addEventListener("click", () => {
+            document.getElementById("modal-nueva").classList.remove("open");
+        });
+
+        document.getElementById("btn-confirmar-solicitud").addEventListener("click", async () => {
+            const tipoServicioId = parseInt(document.getElementById("tipo-servicio").value);
+            const direccion = document.getElementById("direccion").value.trim();
+            const descripcion = document.getElementById("descripcion").value.trim();
+
+            if (!tipoServicioId || !direccion) {
+                mostrarToast("Completa el tipo de servicio y la dirección", true);
+                return;
+            }
+
+            try {
+                await crearSolicitud(tipoServicioId, direccion, descripcion);
+                mostrarToast("Solicitud creada exitosamente");
+                document.getElementById("modal-nueva").classList.remove("open");
+                cargar();
+            } catch (err) {
+                mostrarToast(err.message, true);
+            }
+        });
+
+        // ── Cancelar solicitud ────────────────────────────────────
+        window.abrirCancelar = function (id) {
+            solicitudACancelar = id;
+            document.getElementById("modal-cancelar").classList.add("open");
+        };
+
+        document.getElementById("btn-no-cancelar").addEventListener("click", () => {
+            document.getElementById("modal-cancelar").classList.remove("open");
+        });
+
+        document.getElementById("btn-confirmar-cancelar").addEventListener("click", async () => {
+            const motivo = document.getElementById("motivo-cancelacion").value.trim();
+            try {
+                await cancelarSolicitud(solicitudACancelar, motivo || "Sin motivo");
+                mostrarToast("Solicitud cancelada");
+                document.getElementById("modal-cancelar").classList.remove("open");
+                cargar();
+            } catch (err) {
+                mostrarToast(err.message, true);
+            }
+        });
+
+        // ── Calificar ─────────────────────────────────────────────
+        window.abrirCalificar = function (id) {
+            window.location.href = `/pages/calificar.html?solicitudId=${id}`;
+        };
+
+        cargar();
+    </script>
+</body>
+</html>
