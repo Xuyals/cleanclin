@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trabajadores — Clean Clinn</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .filtros {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .filtro-btn {
+            background: var(--gris-medio);
+            border: 1px solid var(--gris-borde);
+            border-radius: 999px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: var(--blanco);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .filtro-btn.activo, .filtro-btn:hover {
+                background: var(--verde);
+                border-color: var(--verde);
+                color: var(--negro);
+                font-weight: 700;
+            }
+
+        .calificacion-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Clean<span>Clinn</span></div>
+        <nav>
+            <a href="/index.html" class="btn btn-outline btn-sm">Inicio</a>
+            <a href="/login.html" class="btn btn-primary btn-sm">Entrar</a>
+        </nav>
+    </nav>
+
+    <div class="page-content">
+        <div class="dash-header">
+            <div>
+                <h1>Trabajadores</h1>
+                <p class="welcome">Profesionales disponibles en la plataforma</p>
+            </div>
+        </div>
+
+        <div class="filtros">
+            <button class="filtro-btn activo" onclick="filtrar('')">Todos</button>
+            <button class="filtro-btn" onclick="filtrar('Limpieza')">🧹 Limpieza</button>
+            <button class="filtro-btn" onclick="filtrar('Plomería')">🔧 Plomería</button>
+            <button class="filtro-btn" onclick="filtrar('Electricidad')">⚡ Electricidad</button>
+            <button class="filtro-btn" onclick="filtrar('Gas')">🔥 Gas</button>
+            <button class="filtro-btn" onclick="filtrar('Vidrios')">🪟 Vidrios</button>
+            <button class="filtro-btn" onclick="filtrar('Reparaciones')">🏠 Reparaciones</button>
+        </div>
+
+        <div id="contenedor">
+            <div class="loader"><div class="spinner"></div></div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+    import { getTrabajadores } from '/js/api.js';
+    import { mostrarToast, estrellas, inicialNombre } from '/js/utils.js';
+
+    let todos = [];
+
+    async function cargar() {
+      try {
+        todos = await getTrabajadores();
+        renderizar(todos);
+      } catch (err) {
+        mostrarToast("Error al cargar trabajadores", true);
+      }
+    }
+
+    function renderizar(lista) {
+      const c = document.getElementById("contenedor");
+
+      if (lista.length === 0) {
+        c.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>No hay trabajadores en esta categoría</p></div>`;
+        return;
+      }
+
+      c.innerHTML = `<div class="grid-3">${lista.map(t => `
+        <div class="trabajador-card">
+          <div class="avatar">${inicialNombre(t.nombre)}</div>
+          <div class="nombre">${t.nombre}</div>
+          <div class="especialidad">${t.especialidad}</div>
+          <div class="calificacion-bar">
+            <span class="estrellas">${estrellas(t.calificacion)}</span>
+            <span style="color:var(--gris-texto)">${t.calificacion > 0 ? t.calificacion.toFixed(1) : "Sin calificaciones"}</span>
+          </div>
+          <div style="font-size:0.83rem; margin-top:0.3rem;">
+            <span class="${t.disponible ? 'disponible-dot' : 'no-disponible-dot'}"></span>
+            ${t.disponible ? "Disponible" : "No disponible"}
+          </div>
+          ${t.descripcion ? `<p style="font-size:0.83rem; color:var(--gris-texto); margin-top:0.3rem;">${t.descripcion}</p>` : ""}
+        </div>
+      `).join("")}</div>`;
+    }
+
+    window.filtrar = function(especialidad) {
+      document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("activo"));
+      event.target.classList.add("activo");
+
+      if (!especialidad) {
+        renderizar(todos);
+      } else {
+        renderizar(todos.filter(t => t.especialidad.includes(especialidad)));
+      }
+    };
+
+    cargar();
+    </script>
+</body>
+</html>
