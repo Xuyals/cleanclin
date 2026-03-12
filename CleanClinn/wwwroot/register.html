@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registrarse — Clean Clinn</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .tipo-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tipo-btn {
+            background: var(--gris-medio);
+            border: 2px solid var(--gris-borde);
+            border-radius: var(--radio);
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .tipo-btn.activo {
+                border-color: var(--verde);
+                background: rgba(0,200,150,0.08);
+            }
+
+            .tipo-btn .icono {
+                font-size: 1.5rem;
+                margin-bottom: 0.3rem;
+            }
+
+            .tipo-btn p {
+                font-size: 0.8rem;
+                color: var(--gris-texto);
+                margin-top: 0.2rem;
+            }
+
+        #campo-especialidad {
+            display: none;
+        }
+    </style>
+</head>
+<body class="auth-page">
+
+    <div class="auth-box" style="max-width:480px;">
+        <h2>Crear cuenta</h2>
+        <p class="subtitle">Únete a Clean Clinn</p>
+
+        <div class="tipo-selector">
+            <div class="tipo-btn activo" id="btn-usuario" onclick="seleccionarTipo('usuario')">
+                <div class="icono">🏠</div>
+                <strong>Usuario</strong>
+                <p>Solicito servicios</p>
+            </div>
+            <div class="tipo-btn" id="btn-trabajador" onclick="seleccionarTipo('trabajador')">
+                <div class="icono">🔧</div>
+                <strong>Trabajador</strong>
+                <p>Ofrezco servicios</p>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Nombre completo</label>
+            <input type="text" id="nombre" placeholder="Tu nombre" />
+        </div>
+
+        <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="email" placeholder="tu@correo.com" />
+        </div>
+
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="password" placeholder="Mínimo 6 caracteres" />
+        </div>
+
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="telefono" placeholder="3001234567" />
+        </div>
+
+        <div class="form-group">
+            <label>Dirección</label>
+            <input type="text" id="direccion" placeholder="Calle 123 # 45-67" />
+        </div>
+
+        <div class="form-group" id="campo-especialidad">
+            <label>Especialidad</label>
+            <select id="especialidad">
+                <option value="">Selecciona tu especialidad</option>
+                <option value="Limpieza">🧹 Limpieza</option>
+                <option value="Plomería">🔧 Plomería</option>
+                <option value="Electricidad">⚡ Electricidad</option>
+                <option value="Gas">🔥 Gas</option>
+                <option value="Vidrios">🪟 Vidrios</option>
+                <option value="Reparaciones Generales">🏠 Reparaciones Generales</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" id="btn-register" style="width:100%; justify-content:center; padding:0.85rem;">
+            Crear cuenta
+        </button>
+
+        <div class="auth-switch">
+            ¿Ya tienes cuenta? <a href="/login.html">Iniciar sesión</a>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+    import { register } from '/js/api.js';
+    import { mostrarToast } from '/js/utils.js';
+
+    let tipoSeleccionado = "usuario";
+
+    window.seleccionarTipo = function(tipo) {
+      tipoSeleccionado = tipo;
+      document.getElementById("btn-usuario").classList.toggle("activo", tipo === "usuario");
+      document.getElementById("btn-trabajador").classList.toggle("activo", tipo === "trabajador");
+      document.getElementById("campo-especialidad").style.display = tipo === "trabajador" ? "flex" : "none";
+    };
+
+    document.getElementById("btn-register").addEventListener("click", async () => {
+      const nombre      = document.getElementById("nombre").value.trim();
+      const email       = document.getElementById("email").value.trim();
+      const password    = document.getElementById("password").value;
+      const telefono    = document.getElementById("telefono").value.trim();
+      const direccion   = document.getElementById("direccion").value.trim();
+      const especialidad = document.getElementById("especialidad").value;
+
+      if (!nombre || !email || !password || !telefono) {
+        mostrarToast("Completa todos los campos obligatorios", true);
+        return;
+      }
+
+      if (tipoSeleccionado === "trabajador" && !especialidad) {
+        mostrarToast("Selecciona tu especialidad", true);
+        return;
+      }
+
+      const btn = document.getElementById("btn-register");
+      btn.disabled = true;
+      btn.textContent = "Creando cuenta...";
+
+      try {
+        await register({ nombre, email, password, telefono, direccion, especialidad: tipoSeleccionado === "trabajador" ? especialidad : "" });
+        mostrarToast("Cuenta creada. Ahora inicia sesión");
+        setTimeout(() => window.location.href = "/login.html", 1200);
+      } catch (err) {
+        mostrarToast(err.message, true);
+        btn.disabled = false;
+        btn.textContent = "Crear cuenta";
+      }
+    });
+    </script>
+</body>
+</html>
