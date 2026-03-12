@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Trabajador — Clean Clinn</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--gris-borde);
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: 0.7rem 1.3rem;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gris-texto);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -1px;
+        }
+
+            .tab.activa {
+                color: var(--verde);
+                border-bottom-color: var(--verde);
+            }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">Clean<span>Clinn</span></div>
+        <nav>
+            <button class="btn btn-outline btn-sm" id="btn-logout">Salir</button>
+        </nav>
+    </nav>
+
+    <div class="page-content">
+
+        <div class="dash-header">
+            <div>
+                <h1>Panel de trabajo</h1>
+                <p class="welcome" id="bienvenida">Hola 👋</p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab activa" id="tab-disponibles" onclick="cambiarTab('disponibles')">Disponibles</div>
+            <div class="tab" id="tab-mis-servicios" onclick="cambiarTab('mis-servicios')">Mis servicios</div>
+        </div>
+
+        <div id="contenedor">
+            <div class="loader"><div class="spinner"></div></div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+    import { getSolicitudes, aceptarSolicitud, completarSolicitud } from '/js/api.js';
+    import { mostrarToast, badgeEstado, requireAuth, logout } from '/js/utils.js';
+
+    requireAuth();
+
+    const nombre = localStorage.getItem("nombre");
+    document.getElementById("bienvenida").textContent = `Hola, ${nombre} 👋`;
+    document.getElementById("btn-logout").addEventListener("click", logout);
+
+    let todas = [];
+    let tabActiva = "disponibles";
+
+    async function cargar() {
+      try {
+        todas = await getSolicitudes();
+        renderizar();
+      } catch (err) {
+        mostrarToast("Error al cargar solicitudes", true);
+      }
+    }
+
+    function renderizar() {
+      const c = document.getElementById("contenedor");
+
+      let lista;
+      if (tabActiva === "disponibles") {
+        lista = todas.filter(s => s.estado === "Pendiente");
+      } else {
+        lista = todas.filter(s => s.estado !== "Pendiente");
+      }
+
+      if (lista.length === 0) {
+        const msg = tabActiva === "disponibles"
+          ? "No hay solicitudes disponibles en este momento"
+          : "Aún no tienes servicios asignados";
+        c.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${msg}</p></div>`;
+        return;
+      }
+
+      c.innerHTML = `<div style="display:flex; flex-direction:column; gap:1rem;">${lista.map(s => `
+        <div class="solicitud-card">
+          <div class="top">
+            <div class="tipo">${s.tipoServicio}</div>
+            ${badgeEstado(s.estado)}
+          </div>
+          <div class="meta">
+            <span>📍 ${s.direccion}</span>
+            <span>👤 Cliente: ${s.nombreUsuario}</span>
+            <span>💰 $${s.costoEstimado.toLocaleString()}</span>
+            <span>🕐 ${s.fechaCreacion}</span>
+          </div>
+          <div class="acciones">
+            ${s.estado === "Pendiente" ? `<button class="btn btn-primary btn-sm" onclick="aceptar(${s.id})">✓ Aceptar</button>` : ""}
+            ${s.estado === "Aceptada" ? `<button class="btn btn-outline btn-sm" onclick="completar(${s.id})">✅ Marcar completado</button>` : ""}
+          </div>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    window.cambiarTab = function(tab) {
+      tabActiva = tab;
+      document.getElementById("tab-disponibles").classList.toggle("activa", tab === "disponibles");
+      document.getElementById("tab-mis-servicios").classList.toggle("activa", tab === "mis-servicios");
+      renderizar();
+    };
+
+    window.aceptar = async function(id) {
+      try {
+        await aceptarSolicitud(id);
+        mostrarToast("Solicitud aceptada");
+        cargar();
+      } catch (err) {
+        mostrarToast(err.message, true);
+      }
+    };
+
+    window.completar = async function(id) {
+      try {
+        await completarSolicitud(id);
+        mostrarToast("Servicio marcado como completado");
+        cargar();
+      } catch (err) {
+        mostrarToast(err.message, true);
+      }
+    };
+
+    cargar();
+    </script>
+</body>
+</html>
